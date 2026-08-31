@@ -1,0 +1,26 @@
+services:
+  proof-server:
+    image: midnightntwrk/proof-server:8.1.0
+    command: ["midnight-proof-server", "-v"]
+    ports:
+      - "6300:6300"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6300/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  indexer:
+    image: midnightntwrk/indexer-standalone:4.3.3
+    ports:
+      - "8088:8088"
+    environment:
+      APP__APPLICATION__NETWORK_ID: "undeployed"
+      APP__INFRA__STORAGE__PASSWORD: "indexer"
+      APP__INFRA__PUB_SUB__PASSWORD: "indexer"
+      APP__INFRA__LEDGER_STATE_STORAGE__PASSWORD: "indexer"
+
+  node:
+    image: midnightntwrk/midnight-node:1.0.0
+    ports:
+      - "9944:9944"

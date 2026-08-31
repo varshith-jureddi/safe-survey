@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Researcher {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  surveys      Survey[]
+
+  @@map("researchers")
+}
+
+model Survey {
+  id              String    @id @default(uuid())
+  researcherId    String    @map("researcher_id")
+  researcher      Researcher @relation(fields: [researcherId], references: [id])
+  title           String
+  description     String?
+  status          String    @default("DRAFT")
+  eligibility     Json?
+  eligibilityHash String?   @map("eligibility_hash")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  publishedAt     DateTime? @map("published_at")
+  closedAt        DateTime? @map("closed_at")
+
+  questions Question[]
+  responses Response[]
+
+  @@map("surveys")
+}
+
+model Question {
+  id           String  @id @default(uuid())
+  surveyId     String  @map("survey_id")
+  survey       Survey  @relation(fields: [surveyId], references: [id])
+  position     Int
+  questionType String  @map("question_type")
+  questionText String  @map("question_text")
+  options      Json?
+  required     Boolean @default(true)
+
+  answers Answer[]
+
+  @@map("questions")
+}
+
+model Response {
+  id                  String   @id @default(uuid())
+  surveyId            String   @map("survey_id")
+  survey              Survey   @relation(fields: [surveyId], references: [id])
+  nullifier           String
+  submittedAt         DateTime @default(now()) @map("submitted_at")
+
+  answers Answer[]
+
+  @@unique([surveyId, nullifier])
+  @@map("responses")
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  responseId String   @map("response_id")
+  response   Response @relation(fields: [responseId], references: [id])
+  questionId String   @map("question_id")
+  question   Question @relation(fields: [questionId], references: [id])
+  answer     Json
+
+  @@map("answers")
+}

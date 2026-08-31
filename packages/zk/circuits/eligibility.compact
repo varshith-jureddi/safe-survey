@@ -1,0 +1,45 @@
+pragma language_version >= 0.22 && <= 0.23;
+
+import CompactStandardLibrary;
+
+// Phase 3 MVP circuit for the survey platform.
+// Private witnesses are supplied by the participant's proving environment.
+// Only the eligibility decision, survey binding and survey-scoped nullifier
+// are disclosed by the circuit.
+
+witness participantAge(): Uint<16>;
+witness participantCountry(): Bytes<2>;
+witness participantSecret(): Bytes<32>;
+
+export circuit proveEligibility(
+  surveyId: Bytes<32>,
+  eligibilityHash: Bytes<32>
+): [Boolean, Bytes<32>, Bytes<32>, Bytes<32>] {
+  const age = participantAge();
+  const country = participantCountry();
+  const secret = participantSecret();
+
+  // Phase 3 MVP requirements from SPEC-001:
+  //   age >= 18
+  //   country == India (ISO-3166 alpha-2: IN)
+  const eligible = age >= 18 && country == pad(2, "IN");
+
+  // Domain-separated, survey-scoped nullifier.
+  // Same participant + same survey => same nullifier.
+  // Same participant + different survey => different nullifier.
+  const nullifier = persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "survey-zk:nullifier:v1"),
+    secret,
+    surveyId,
+  ]);
+
+  // Explicit disclosure is intentional: none of these values reveal the
+  // private age/country/secret. surveyId and eligibilityHash bind the proof
+  // to the exact survey/ruleset, and the result/nullifier are public outputs.
+  return [
+    disclose(eligible),
+    disclose(nullifier),
+    disclose(surveyId),
+    disclose(eligibilityHash),
+  ];
+}

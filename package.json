@@ -1,0 +1,1 @@
+{"name":"survey-zk-platform","private":true,"type":"module","workspaces":["apps/*","packages/*"],"scripts":{"dev:api":"tsx apps/api/src/index.ts","test:phase4":"node --test test/phase4-security.test.mjs","zk:build":"npm --workspace packages/zk run build","zk:compile":"npm --workspace packages/zk run compact"},"devDependencies":{"prettier":"^3.3.0","typescript":"^5.5.0"}}
